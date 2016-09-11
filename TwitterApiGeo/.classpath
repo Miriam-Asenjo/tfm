@@ -1,0 +1,31 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<classpath>
+	<classpathentry including="**/*.java|**/*.json" kind="src" path="src/main/java"/>
+	<classpathentry kind="con" path="org.eclipse.jdt.launching.JRE_CONTAINER"/>
+	<classpathentry kind="var" path="M2_REPO/commons-codec/commons-codec/1.6/commons-codec-1.6.jar"/>
+	<classpathentry kind="var" path="M2_REPO/commons-logging/commons-logging/1.1.1/commons-logging-1.1.1.jar"/>
+	<classpathentry kind="var" path="M2_REPO/com/google/code/gson/gson/2.7/gson-2.7.jar"/>
+	<classpathentry kind="var" path="M2_REPO/com/google/guava/guava/14.0/guava-14.0.jar"/>
+	<classpathentry kind="var" path="M2_REPO/com/twitter/hbc-core/2.2.0/hbc-core-2.2.0.jar"/>
+	<classpathentry kind="var" path="M2_REPO/org/apache/httpcomponents/httpclient/4.2.5/httpclient-4.2.5.jar"/>
+	<classpathentry kind="var" path="M2_REPO/org/apache/httpcomponents/httpcore/4.2.5/httpcore-4.2.5.jar"/>
+	<classpathentry kind="var" path="M2_REPO/org/slf4j/slf4j-api/1.7.20/slf4j-api-1.7.20.jar"/>
+	<classpathentry kind="var" path="M2_REPO/com/twitter/joauth/6.0.2/joauth-6.0.2.jar"/>
+	<classpathentry kind="var" path="M2_REPO/com/google/code/findbugs/jsr305/1.3.9/jsr305-1.3.9.jar"/>
+	<classpathentry kind="var" path="M2_REPO/com/twitter/hbc-twitter4j/2.2.0/hbc-twitter4j-2.2.0.jar"/>
+	<classpathentry kind="var" path="M2_REPO/org/twitter4j/twitter4j-core/4.0.1/twitter4j-core-4.0.1.jar"/>
+	<classpathentry kind="var" path="M2_REPO/org/twitter4j/twitter4j-stream/4.0.1/twitter4j-stream-4.0.1.jar"/>
+	<classpathentry kind="var" path="M2_REPO/org/slf4j/slf4j-simple/1.7.20/slf4j-simple-1.7.20.jar"/>
+	<classpathentry kind="var" path="M2_REPO/org/apache/kafka/kafka-clients/0.9.0.1/kafka-clients-0.9.0.1.jar"/>
+	<classpathentry kind="var" path="M2_REPO/org/xerial/snappy/snappy-java/1.1.1.7/snappy-java-1.1.1.7.jar"/>
+	<classpathentry kind="var" path="M2_REPO/net/jpountz/lz4/lz4/1.2.0/lz4-1.2.0.jar"/>
+	<classpathentry kind="var" path="M2_REPO/org/apache/avro/avro/1.8.1/avro-1.8.1.jar"/>
+	<classpathentry kind="var" path="M2_REPO/org/codehaus/jackson/jackson-core-asl/1.9.13/jackson-core-asl-1.9.13.jar"/>
+	<classpathentry kind="var" path="M2_REPO/org/codehaus/jackson/jackson-mapper-asl/1.9.13/jackson-mapper-asl-1.9.13.jar"/>
+	<classpathentry kind="var" path="M2_REPO/com/thoughtworks/paranamer/paranamer/2.7/paranamer-2.7.jar"/>
+	<classpathentry kind="var" path="M2_REPO/org/apache/commons/commons-compress/1.8.1/commons-compress-1.8.1.jar"/>
+	<classpathentry kind="var" path="M2_REPO/org/tukaani/xz/1.5/xz-1.5.jar"/>
+	<classpathentry kind="var" path="M2_REPO/joda-time/joda-time/2.3/joda-time-2.3.jar"/>
+	<classpathentry kind="lib" path="C:/Users/TOSHIBA/.ivy2/cache/tech.allegro.schema.json2avro/converter/jars/converter-0.2.0.jar"/>
+	<classpathentry kind="output" path="target/classes"/>
+</classpath>
