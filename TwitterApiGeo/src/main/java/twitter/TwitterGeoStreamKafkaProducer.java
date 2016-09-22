@@ -68,7 +68,6 @@ public class TwitterGeoStreamKafkaProducer implements Runnable
 		this.locations = locations;
 		this.kafkaProperties = kafkaProperties;
 		this.twitterClient = null;
-		//this.writer = new PrintWriter("pointsTweets.txt", "UTF-8");
 
 	}
 	
@@ -78,14 +77,8 @@ public class TwitterGeoStreamKafkaProducer implements Runnable
 	    StatusesFilterEndpoint endpoint = new StatusesFilterEndpoint();
 
 
-	    //endpoint.locations(Lists.newArrayList(new Location(this.bottomLeft, this.upperRight)));
 	    endpoint.locations(this.locations);
 	    Authentication auth = new OAuth1(this.consumerKey, this.consumerSecret, this.token, this.secret);
-        System.out.println ("PATH: " + endpoint.getPath());
-
-        System.out.println(endpoint.getPostParamString());
-
-        System.out.println("Saliendo de dormir");
         
 	    this.twitterClient = new ClientBuilder()
 	            .hosts(Constants.STREAM_HOST)
@@ -99,14 +92,12 @@ public class TwitterGeoStreamKafkaProducer implements Runnable
 
 	    kafkaProperties.put("key.serializer", "org.apache.kafka.common.serialization.StringSerializer"); 
 	    kafkaProperties.put("value.serializer", "org.apache.kafka.common.serialization.ByteArraySerializer"); 
-	    
-	    
+
 	    try
 	    {
 		    this.producer = new KafkaProducer<String,byte[]>(this.kafkaProperties);
 		    
 		    int count = 0;
-		    int tweetsNoGeolocalizados = 0;
 		    while (true)
 		    {
 		      try {
@@ -114,10 +105,7 @@ public class TwitterGeoStreamKafkaProducer implements Runnable
 		    	  //if tweet has coordinates informed then it will send to kafka topic
 		    	  if (msg.contains("\"coordinates\":{\"type\":\"Point\""))
 		    	  {
-		    		  //System.out.println("Tweet nº: " + count);
-		    		  //sending tweet to Kafka
 		    		  String messageId = UUID.randomUUID().toString();
-		    		  //System.out.println("message: " + msg);
 		    	  
 		    		  byte[] tweetAvro = convertJsonToAvro(msg);
 		    		  if (tweetAvro != null)
@@ -125,12 +113,10 @@ public class TwitterGeoStreamKafkaProducer implements Runnable
 		    			ProducerRecord<String, byte[]> tweetRecord = new ProducerRecord<String, byte[]>("tweetsMadrid", messageId, tweetAvro);
 		    		  	producer.send(tweetRecord);	
 		    		  	count ++;
+		    		  	System.out.println(" Geolocalizados: " + count);
 		    		  }
-		    	  }else {
-		    		  tweetsNoGeolocalizados ++;
 		    	  }
 		    	  
-		    	  System.out.println("No Geolocalizados: " + tweetsNoGeolocalizados + " " + " Geolocalizados: " + count);
 		      }
 		      catch (InterruptedException ex)
 		      {
@@ -150,33 +136,16 @@ public class TwitterGeoStreamKafkaProducer implements Runnable
 	
 	private byte[] convertJsonToAvro (String tweetJson)
 	{
-		//System.out.println(tweetJson);
 		InputStream input = new ByteArrayInputStream(tweetJson.getBytes());
 		DataInputStream din = new DataInputStream(input);
 		try {
-			//Schema schema = Schema.parse(schemastr);
 			JsonAvroConverter converter = new JsonAvroConverter();
-
-			// conversion to GenericData.Record
 			GenericData.Record datum = converter.convertToGenericDataRecord(tweetJson.getBytes(),twitter.Tweet.SCHEMA$);
-			Decoder decoder = DecoderFactory.get().jsonDecoder(twitter.Tweet.SCHEMA$, din);
 			String coordinates = datum.get("coordinates").toString();
-			int indexS = coordinates.indexOf("[");
-			int indexE = coordinates.indexOf("]");
-			//System.out.println(coordinates.substring(indexS+1, indexE));
-			String loc = coordinates.substring(indexS+1, indexE);
-			String[] points = loc.split(",");
-			String latitude = points[1];
-			String longitude = points [0];
 			//this.writer.write(latitude + "," + longitude + "\n");
 			//System.out.println("Longitude: " + longitude + " Latitude: " + latitude);
-	        System.out.println(datum.get("coordinates"));
-	       // this.writer.flush();
-
-			System.out.println("Leido");
-	
+	        System.out.println("Tweet coordinates: " + coordinates);
 			GenericDatumWriter<Object>  w = new GenericDatumWriter<Object>(Tweet.SCHEMA$);
-			
 			ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
 			Encoder e = EncoderFactory.get().binaryEncoder(outputStream, null);
 			w.write(datum, e);

@@ -1,6 +1,12 @@
 {
 points = [
-	{"bottom_left_longitude":-3.691118, "bottom_left_latitude":40.425045, "upper_right_longitude":-3.687857, "upper_right_latitude":40.427234}
+{"bottom_left_longitude":-3.704377, "bottom_left_latitude":40.416609, "upper_right_longitude":-3.702627, "upper_right_latitude":40.417034},
+{"bottom_left_longitude":-3.708165, "bottom_left_latitude":40.47859, "upper_right_longitude":-3.704777, "upper_right_latitude":40.480837},
+{"bottom_left_longitude":-3.616297, "bottom_left_latitude":40.463554, "upper_right_longitude":-3.611622, "upper_right_latitude":40.465746},
+{"bottom_left_longitude":-3.59867, "bottom_left_latitude":40.367546, "upper_right_longitude":-3.595846, "upper_right_latitude":40.369656},
+{"bottom_left_longitude":-3.712229, "bottom_left_latitude":40.342004, "upper_right_longitude":-3.710298, "upper_right_latitude":40.342922},
+{"bottom_left_longitude":-3.767336, "bottom_left_latitude":40.374049, "upper_right_longitude":-3.764823, "upper_right_latitude":40.375722},
+{"bottom_left_longitude":-3.79305, "bottom_left_latitude":40.431945, "upper_right_longitude":-3.789422, "upper_right_latitude":40.433424}
 	]
 }
 

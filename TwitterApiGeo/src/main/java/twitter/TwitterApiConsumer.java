@@ -35,9 +35,9 @@ public class TwitterApiConsumer {
   public static void main(String[] args) throws Exception
   {
 
-	  	 if (args.length != 3)
+	  	 if (args.length != 2)
 	  	 {
-	  		 System.out.println("You should pass as parameter <kafka properties file> <twitter credentials> and index");
+	  		 System.out.println("You should pass as parameter <kafka properties file> <twitter credentials>");
 	  		 return; 
 	  	 }
 	  	 
@@ -56,7 +56,6 @@ public class TwitterApiConsumer {
 
 	     //load all the properties from this file
 	     kafkaProperties.load(file);
-	     int index = Integer.parseInt(args[2]);
 	     if (!kafkaProperties.containsKey("bootstrap.servers"))
 	     {
 	    	 System.out.println("Property file: " + args[0] + " must have property metadata.broker.list=<kafkabroker1>:<port>,<kafkabroker2>:<port> defined");
@@ -82,8 +81,6 @@ public class TwitterApiConsumer {
          String consumerSecret = twitterProperties.getProperty("consumerSecret");
          String token= twitterProperties.getProperty("token");
          String secret = twitterProperties.getProperty("secret");
-         /*Coordinate bottomLeft = new Coordinate(-3.828572, 40.353401);
-         Coordinate upperRight = new Coordinate(-3.597173, 40.512809);*/
          ArrayList<Location> locations = new ArrayList<Location>();
          
          System.out.println(TwitterApiConsumer.class);
@@ -98,20 +95,8 @@ public class TwitterApiConsumer {
          }
 
          String jsonContent = stringBuilder.toString();
-         System.out.println(jsonContent);
-         
-
-
-         Coordinate bottomLeft = new Coordinate(-3.703494, 40.416809);
-         Coordinate upperRight = new Coordinate(-3.702636, 40.417030);
-         
-         locations.add(new Location(bottomLeft,upperRight));
-         
-         Coordinate bottomLeft_1 = new Coordinate (-3.688573,40.421206);
-         Coordinate upperRight_1 = new Coordinate (-3.689179,40.420144);
-         locations.add(new Location(bottomLeft_1,upperRight_1));
-         
-         ArrayList<Location> multipleLocations = parseBoundedBoxes(jsonContent,index);
+       
+         ArrayList<Location> multipleLocations = parseBoundedBoxes(jsonContent);
          
          TwitterGeoStreamKafkaProducer twitterGeoMadridKafkaProducer = new TwitterGeoStreamKafkaProducer(consumerKey, consumerSecret, token, secret, multipleLocations, kafkaProperties);
          final Thread thread = new Thread(twitterGeoMadridKafkaProducer);
@@ -131,7 +116,7 @@ public class TwitterApiConsumer {
 
   }
   
-  public static ArrayList<Location> parseBoundedBoxes (String jsonContent, int index) {
+  public static ArrayList<Location> parseBoundedBoxes (String jsonContent) {
 	  ArrayList<Location> locations = new ArrayList<Location>();
       try {
 
@@ -141,7 +126,6 @@ public class TwitterApiConsumer {
           //jsonArr.
           Gson googleJson = new Gson();
           BoundingBoxTwitter[] boxes = googleJson.fromJson(jsonArr, BoundingBoxTwitter[].class);
-          System.out.println("List size is : "+ boxes.length);
           int i = 0;
           while (i < (boxes.length) )
           {
