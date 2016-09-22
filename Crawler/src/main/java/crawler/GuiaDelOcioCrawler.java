@@ -90,28 +90,37 @@ public class GuiaDelOcioCrawler extends BaseCrawler {
 
 	        TagNode firstSection = (TagNode)node.evaluateXPath("//div[@class='detail-page']/section")[0];
 	        
-	        TagNode direccionNode = (TagNode)firstSection.evaluateXPath("//ul/li/strong[text() = 'Dirección:']")[0];
-	        String direccion = direccionNode.getParent().getText().toString().replace("Dirección: ", "");
-	        
-	        Object[] completeAddressNodes = node.evaluateXPath("//ul/li/strong[text() = 'Dirección']");
-	        if (completeAddressNodes.length >= 1)
+	        Object[] addresses = firstSection.evaluateXPath("//ul/li/strong[text() = 'Dirección:']");
+	        String address = null;
+	        if (addresses != null && addresses.length >= 1)
 	        {
-		        TagNode completeAdressNode = (TagNode)(completeAddressNodes[0]);
-		        String direccionBottom = completeAdressNode.getParent().getText().toString().replace("Dirección: ", "");
-		        if (direccionBottom != null && direccionBottom!= "")
-		        	direccion = direccionBottom;
+	        	address = ((TagNode)addresses[0]).getParent().getText().toString().replace("Dirección: ", "");
+	        
+		        Object[] completeAddressNodes = node.evaluateXPath("//ul/li/strong[text() = 'Dirección']");
+		        if (completeAddressNodes != null && completeAddressNodes.length >= 1)
+		        {
+			        TagNode completeAdressNode = (TagNode)(completeAddressNodes[0]);
+			        String addressBottom = completeAdressNode.getParent().getText().toString().replace("Dirección: ", "");
+			        if (addressBottom != null && addressBottom!= "")
+			        	address = addressBottom;
+		        }
 	        }
 
-	        TagNode placeNode = (TagNode)firstSection.evaluateXPath("//ul/li/strong[text() = 'Dónde:']")[0];
-	        String place  = placeNode.getParent().getText().toString().replace("Dónde: ", "");
+	        Object[] places = firstSection.evaluateXPath("//ul/li/strong[text() = 'Dónde:']");
+	        String place = null;
+	        if (places != null && places.length >= 1)
+	        {
+	        	place  = ((TagNode)places[0]).getParent().getText().toString().replace("Dónde: ", "");
+	        }
+	        
 	        Object[] timeObjects = firstSection.evaluateXPath("//ul/li/strong[text() = 'Horarios:']");
 	        if (timeObjects.length > 0)
 	        {
 	        	String time  = ((TagNode)(timeObjects[0])).getParent().getText().toString().replace("Horarios: ", "");
 		        ArrayList<LocalDateTime> eventTimes = EventParserUtils.ParseTheaterTimetable(time, startDate, endDate);
-		        if (!theaterPlays.containsKey(eventName) && eventTimes.size() > 0 && direccion != null)
+		        if (!theaterPlays.containsKey(eventName) && eventTimes.size() > 0 && address != null)
 		        {
-		        	Event event = new Event(eventName, direccion, place, eventTimes, EventType.THEATREDANCE);
+		        	Event event = new Event(eventName, address, place, eventTimes, EventType.THEATREDANCE);
 		        	Venue venue = getVenueForEvent(event);
 		        	if (venue != null)
 		        	{
@@ -404,7 +413,7 @@ public class GuiaDelOcioCrawler extends BaseCrawler {
 		}
 		
 		Document weightEventDoc = new Document();
-		String id = String.format("%s", event.getName().replace(" ","").toLowerCase());
+		String id = String.format("_%s", event.getName().replace(" ","").toLowerCase());
 		weightEventDoc.append("name", event.getName());
 		weightEventDoc.append("weight", 0.5);
 		UpdateOptions options = new UpdateOptions().upsert(true);

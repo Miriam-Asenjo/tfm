@@ -171,7 +171,7 @@ public final class EventParserUtils {
 		String [] horariosDetails = horariosGroup.split("y");
 		for (String horarioInfo: horariosDetails)
 		{
-			String [] timeInterval = horarioInfo.split("(\\.)|(:)");
+			String [] timeInterval = horarioInfo.split("(\\.)|(:)|(,)");
 			int hour = Integer.parseInt(timeInterval[0].trim());
 			int minute = timeInterval.length > 1 ? Integer.parseInt(timeInterval[1].trim()):0;
 			horarios.add(new AbstractMap.SimpleEntry(hour,minute));
