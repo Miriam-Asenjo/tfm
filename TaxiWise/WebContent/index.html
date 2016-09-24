@@ -1,0 +1,474 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset='utf-8' />
+    <title>TaxiWise</title>
+	<link rel="stylesheet" type="text/css" href="styles.css">
+    <meta name='viewport' content='initial-scale=1,maximum-scale=1,user-scalable=no' />
+    <script src='https://api.tiles.mapbox.com/mapbox-gl-js/v0.21.0/mapbox-gl.js'></script>
+	<script src="https://ajax.googleapis.com/ajax/libs/jquery/1.8/jquery.min.js"></script>
+    <script src='taxiStands.json'></script>
+    <script src='eventos.json'></script>
+    <script src='conciertos.json'></script>
+	<script src='distritosMadrid.geojson'></script>
+	<script src='barriosMadrid.geojson'></script>
+    <link href='https://api.tiles.mapbox.com/mapbox-gl-js/v0.21.0/mapbox-gl.css' rel='stylesheet' />
+	<script src='https://api.mapbox.com/mapbox.js/v2.4.0/mapbox.js'></script>
+	<link href='https://api.mapbox.com/mapbox.js/v2.4.0/mapbox.css' rel='stylesheet' />
+    <style>
+        body { margin:0; padding:0; }
+		ul {
+			list-style-type: none;
+			margin: 0;
+			padding: 0;
+			display:block;
+		}
+
+		li {
+			float: left;
+			width: 25%;
+		}
+
+		li a {
+			display: block;
+			text-align: center;
+			padding: 16px;
+			text-decoration: none;
+		}
+
+        #map { position:absolute; top:0; bottom:0; width:100%; }
+		object[name="stand-small"]  path{
+			fill: red;		
+		}
+		
+		object[name="stand-small"] {
+
+			width: 10px;
+			height: 10px;
+		}
+		
+		object[name="stand-medium"] {
+			width: 15px;
+			height: 15px;
+		}
+		
+		object[name="stand-medium"] > svg > path{
+			fill: green;		
+		}
+		
+		object[name="stand-large"] {
+			width: 20px;
+			height: 20px;
+		}
+		
+		object[name="stand-large"] > svg > path {
+			fill: blue;		
+		}
+		
+		object[name="stand-xlarge"] {
+			width: 25px;
+			height: 25px;
+		}
+		
+		object[name="stand-xlarge"] > svg > path{
+			fill: red;
+		}
+		
+		#showstands {
+			position:absolute;
+			top:0;
+			left:0;
+			height: 30px;
+			width: auto;
+			font-weight: bold;
+			margin-top: 10px;
+			margin-left: 10px;
+			padding: 9px;
+			border: 4px solid white;
+			font-size: 22px;		
+		}
+		
+		#eventstoday {
+			position:absolute;
+			top:0;
+			left:0;
+			height: 30px;
+			width: auto;
+			font-weight: bold;
+			margin-top: 80px;
+			margin-left: 10px;
+			padding: 9px;
+			border: 4px solid white;
+			font-size: 22px;		
+		}
+		
+		.btn-showstands-noselected,.btn-events-today-noselected,.btn-events-tomorrow-noselected, .btn-neighbourhoods-noselected {
+			background-color:#606060;
+			color: white;
+		}
+		
+		.btn-showstands-selected,.btn-events-today-selected,.btn-events-tomorrow-selected, .btn-neighbourhoods-selected {
+			background-color:#888888;
+			color: #AAAAAA;
+		}
+		
+		#eventstomorrow {
+			position:absolute;
+			top:120px;
+			left:0;
+			width: auto;
+			height: 30px;
+			width: auto;
+			font-weight: bold;
+			margin-top: 30px;
+			margin-left: 10px;
+			padding: 9px;
+			border: 4px solid white;
+			font-size: 22px;		
+		
+		}
+		
+		#neighbourhoods {
+			position:absolute;
+			top:195px;
+			left:0;
+			width: auto;
+			height: 30px;
+			width: auto;
+			font-weight: bold;
+			margin-top: 30px;
+			margin-left: 10px;
+			padding: 9px;
+			border: 4px solid white;
+			font-size: 22px;		
+		
+		}
+		
+		.legendStands {
+			width: 300px;
+		}
+		.legendStands label,
+		.legendStands span {
+		  display:block;
+		  float:left;
+		  height:20px;
+		  width:70px;
+		  text-align:center;
+		  font-size:11px;
+		  color:#808080;
+		  }
+		  
+		.label-neighbourhood
+		{
+			color: #333344;
+			font-weight: bold;
+		}
+
+    </style>
+</head>
+<body>
+<div id='legendStands' style='display:none;'>
+  <strong>Número Plazas Paradas de Taxi</strong>
+  <nav class='legendStands clearfix'>
+    <span style='background:gray'></span>
+    <span style='background:green'></span>
+    <span style='background:blue'></span>
+    <span style='background:red'></span>
+    <label>Menos de 4</label>
+    <label>Entre 4 y 6</label>
+    <label>Entre 6 y 10</label>
+    <label>Más de 10 plazas</label>
+
+</div>
+
+<div id='map'></div>
+<span class="btn-showstands-noselected" id="showstands">Paradas taxi</span>
+<span class="btn-events-today-noselected" id="eventstoday">Eventos Hoy Madrid</span>
+<span class="btn-events-tomorrow-noselected" id="eventstomorrow">Eventos Viernes</span>
+<span class="btn-neighbourhoods-noselected" id="neighbourhoods">Barrios</span>
+<!--<span class="btn-showstands">Eventos Mañana</span>-->
+<ul id="stands-info">
+
+</ul>
+<script type="text/javascript">
+
+/*mapboxgl.accessToken = 'pk.eyJ1IjoibWlyaWNoaXAiLCJhIjoiY2lxbXUyMWRsMDAybGh4bmttcnpteHZsZSJ9.t2MuLkH1L_B38UqLR16IIw';
+var map = new mapboxgl.Map({
+    container: 'map', // container id
+    style: 'mapbox://styles/mapbox/streets-v9', //stylesheet location
+    center: [-3.7057172,40.4169514], // starting position
+    zoom: 12// starting zoom
+});*/
+
+L.mapbox.accessToken = 'pk.eyJ1IjoibWlyaWNoaXAiLCJhIjoiY2lxbXUyMWRsMDAybGh4bmttcnpteHZsZSJ9.t2MuLkH1L_B38UqLR16IIw';
+var map = L.mapbox.map('map', 'mapbox.streets').setView([40.4169514,-3.7057172], 13);
+L.mapbox.styleLayer('mapbox://styles/mapbox/streets-v9').addTo(map);
+
+map.legendControl
+    .addLegend(document.getElementById('legendStands').innerHTML)
+    .setPosition('bottomleft');
+
+var taxi_stand_small = L.icon({
+  iconUrl: "images/taxi-stand-small.svg",
+    iconSize: [15, 15]
+});
+
+var taxi_stand_medium = L.icon({
+  iconUrl: "images/taxi-stand-medium.svg",
+  iconSize: [20, 20]
+});
+var taxi_stand_large = L.icon({
+  iconUrl: "images/taxi-stand-large.svg",
+  iconSize: [25, 25]  
+});
+var taxi_stand_xlarge = L.icon({
+  iconUrl: "images/taxi-stand-xlarge.svg",
+    iconSize: [30, 30]
+});
+
+var event_concert = L.icon({
+  iconUrl: "images/concert.svg",
+});
+
+var event_theatre = L.icon({
+  iconUrl: "images/event.svg",
+});
+
+var $standsInfo = $("#stands-info");
+
+	
+var taxiStandsMarkers = [];
+	
+var btnShowStands = $("#showstands")
+btnShowStands.click(
+	function()
+	{	
+		if (btnShowStands.hasClass("btn-showstands-selected"))
+		{
+			$.each(taxiStandsMarkers, function (index, item)
+			{
+				map.removeLayer(item);
+			});
+			taxiStandsMarkers = [];
+			btnShowStands.removeClass("btn-showstands-selected").addClass("btn-showstands-noselected");
+		}
+		else 
+		{
+			$.ajax(
+					{
+						url: "services/taxistandservice/stands", 
+						success: function(stands){
+							console.log(stands.length);
+							$.each(stands, function (index, item)
+							{
+								console.log(item);
+								var longitude = item.longitude;
+								//console.log(longitude);
+								var latitude = item.latitude;
+								var numPlaces = item.numplaces;
+								var icon = "";
+								if (numPlaces <= 3)
+								{
+									icon = taxi_stand_small;
+								}
+								if (numPlaces > 3 && numPlaces <= 6)
+								{
+									icon = taxi_stand_medium;	
+								}
+								if (numPlaces > 6 && numPlaces <= 10)
+								{
+									icon = taxi_stand_large;	
+								}
+								if (numPlaces >= 10)
+								{
+									icon = taxi_stand_xlarge;	
+								}
+								var taxiMarker = L.marker([latitude,longitude],{icon: icon});
+								taxiMarker.bindPopup("<span>" + item.address + "</span><br/><span>" + numPlaces  + " Plazas</span>");
+								taxiMarker.addTo(map);
+
+								taxiStandsMarkers.push(taxiMarker);	
+								if (btnShowStands.hasClass("btn-showstands-noselected"))
+								{
+									btnShowStands.removeClass("btn-showstands-noselected").addClass("btn-showstands-selected");
+								}
+
+							});
+						},
+						error: function (xhr, ajaxOptions, thrownError) {
+							console.log(xhr.status);
+							console.log(thrownError);
+						}
+					});  
+		}
+	}
+);
+
+var todayEventMarkers = []
+var btnEventsToday = $("#eventstoday")
+btnEventsToday.click(
+	function()
+	{	
+		if (btnEventsToday.hasClass("btn-events-today-selected"))
+		{
+			$.each(todayEventMarkers, function (index, item)
+			{
+				map.removeLayer(item);
+			});
+			todayEventMarkers = []
+			btnEventsToday.removeClass("btn-events-today-selected").addClass("btn-events-today-noselected");
+		}
+		else 
+		{
+			$.ajax(
+					{
+						url: "services/events/today", 
+						success: function(stands){
+							console.log(stands.length);
+							$.each(stands, function (index, item)
+							{
+								console.log(item.type);
+								latitude = item.loc.coordinates[1];
+								longitude = item.loc.coordinates[0];
+								var icon = ""
+								if (item.type == "Teatro-Danza")
+									icon = event_theatre
+								else if (item.type == "Concierto")
+									icon = event_concert
+									
+								var eventMarker = L.marker([latitude,longitude],{icon: icon});
+								var eventTime = new Date(item.time.$date);
+								var eventTimeStr = eventTime.getHours() + ":" + eventTime.getMinutes();
+ 								eventMarker.bindPopup("<span>" + item.name + "</span><br/><span>" + item.address  + "</span><br/><span>Hoy " + "(" + item.type + ")</span></br><span>" + eventTimeStr + "</span>");
+								eventMarker.addTo(map);
+
+								todayEventMarkers.push(eventMarker);	
+
+								if (btnEventsToday.hasClass("btn-events-today-noselected"))
+								{
+									btnEventsToday.removeClass("btn-events-today-noselected").addClass("btn-events-today-selected");
+								}
+
+							});
+						},
+						error: function (xhr, ajaxOptions, thrownError) {
+							console.log(xhr.status);
+							console.log(thrownError);
+						}
+					});  
+		}
+	}
+);
+
+
+
+var tommorowEventMarkers = []
+var btnEventsTomorrow = $("#eventstomorrow")
+btnEventsTomorrow.click(
+	function()
+	{	
+		if (btnEventsTomorrow.hasClass("btn-events-tomorrow-selected"))
+		{
+			$.each(tommorowEventMarkers, function (index, item)
+			{
+				map.removeLayer(item);
+			});
+			tommorowEventMarkers = []
+			btnEventsTomorrow.removeClass("btn-events-tomorrow-selected").addClass("btn-events-tomorrow-noselected");
+		}
+		else 
+		{
+			$.ajax(
+					{
+						url: "services/events/tomorrow", 
+						success: function(stands){
+							console.log(stands.length);
+							$.each(stands, function (index, item)
+							{
+								console.log(item);
+								latitude = item.loc.coordinates[1];
+								longitude = item.loc.coordinates[0];
+								var icon = ""
+								if (item.type == "Teatro-Danza")
+									icon = event_theatre
+								else if (item.type == "Concierto")
+									icon = event_concert
+									
+								var eventMarker = L.marker([latitude,longitude],{icon: icon});
+								var eventTime = new Date(item.time.$date);
+								var eventTimeStr = eventTime.getHours() + ":" + eventTime.getMinutes();
+ 								eventMarker.bindPopup("<span>" + item.name + "</span><br/><span>" + item.address  + "</span><br/><span>Mañana " + "(" + item.type + ")</span></br><span>" + eventTimeStr + "</span>");
+								eventMarker.addTo(map);
+
+								tommorowEventMarkers.push(eventMarker);	
+
+								if (btnEventsTomorrow.hasClass("btn-events-tomorrow-noselected"))
+								{
+									btnEventsTomorrow.removeClass("btn-events-tomorrow-noselected").addClass("btn-events-tomorrow-selected");
+								}
+
+							});
+						},
+						error: function (xhr, ajaxOptions, thrownError) {
+							console.log(xhr.status);
+							console.log(thrownError);
+						}
+					});  
+		}
+	}
+);
+
+colores = ['#FE642E','#FE9A2E','#F4FA58','#58FA58','#58ACFA','#819FF7','#BE81F7','#FF00BF','#F7819F','#848484'];
+var neighbourdMarkers = [];
+var neighbourdLayers = [];
+
+var btnNeighbourhoods = $("#neighbourhoods");
+btnNeighbourhoods.click(function ()
+{
+	if (btnNeighbourhoods.hasClass("btn-neighbourhoods-selected"))
+	{
+		$.each(neighbourdMarkers, function (index, item)
+		{
+			map.removeLayer(item);
+		});
+		$.each(neighbourdLayers, function (index, item)
+		{
+			map.removeLayer(item);
+		});
+		neighbourdMarkers = [];
+		neighbourdLayers = [];
+		btnNeighbourhoods.removeClass("btn-neighbourhoods-selected").addClass("btn-neighbourhoods-noselected");
+	}
+	else 
+	{
+		$.each(barriosMadrid.features, function (index, element){
+			var randomcolor = Math.floor(Math.random() * (9- 0 + 1));
+			element.properties["fill"] = colores[randomcolor];
+			element.properties["tooltip"] = element.properties.label; 
+			element.properties["stroke-width"] = 3; 
+			var featureLayer = L.mapbox.featureLayer(element);
+			neighbourdLayers.push(featureLayer);
+			featureLayer.addTo(map);
+			console.log(featureLayer.getBounds().getCenter().lat);
+			// Define an icon called cssIcon
+			var neighbourdHoodIcon = L.divIcon({
+			  // Specify a class name we can refer to in CSS.
+			  className: 'label-neighbourhood',
+			  // Set marker width and height
+			  iconSize: [60, 30],
+			  html: "<span>" + element.properties.label + "</span>"
+			});
+			
+			var marker = L.marker([featureLayer.getBounds().getCenter().lat, featureLayer.getBounds().getCenter().lng], {icon: neighbourdHoodIcon})
+			marker.addTo(map);
+			neighbourdMarkers.push(marker);
+		});
+		btnNeighbourhoods.removeClass("btn-neighbourhoods-noselected").addClass("btn-neighbourhoods-selected");
+	}
+});
+
+
+</script>
+
+</body>
+</html>

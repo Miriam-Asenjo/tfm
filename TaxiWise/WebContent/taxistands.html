@@ -1,0 +1,214 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset='utf-8' />
+    <title></title>
+	<link rel="stylesheet" type="text/css" href="styles.css">
+    <meta name='viewport' content='initial-scale=1,maximum-scale=1,user-scalable=no' />
+	<script src="https://ajax.googleapis.com/ajax/libs/jquery/1.8/jquery.min.js"></script>
+    <script src='taxiStands.json'></script>
+    <script src='eventos.json'></script>
+    <script src='conciertos.json'></script>
+	<script src='distritosMadrid.geojson'></script>
+	<script src='barriosMadrid.geojson'></script>
+	<script src='https://api.mapbox.com/mapbox.js/v2.4.0/mapbox.js'></script>
+	<link href='https://api.mapbox.com/mapbox.js/v2.4.0/mapbox.css' rel='stylesheet' />
+    <style>
+
+    </style>
+</head>
+<body>
+<div id="map-container">
+<div id='map'></div>
+</div>
+<ul id="stands-info">
+
+</ul>
+<script type="text/javascript">
+
+L.mapbox.accessToken = 'pk.eyJ1IjoibWlyaWNoaXAiLCJhIjoiY2lxbXUyMWRsMDAybGh4bmttcnpteHZsZSJ9.t2MuLkH1L_B38UqLR16IIw';
+var map = L.mapbox.map('map', 'mapbox.streets').setView([40.4169514,-3.7057172], 13);
+ L.mapbox.styleLayer('mapbox://styles/mapbox/streets-v9').addTo(map);
+
+taxiMarkers = [];
+
+
+var imgTaxiLoc = document.createElement('object');
+imgTaxiLoc.type="image/svg+xml";
+var icon = document.createElement("img");
+imgTaxiLoc.data="images/circle.svg";
+var taxi_icon_red = L.icon({
+  iconUrl: "images/circle-red.svg"
+});
+var taxi_icon_green = L.icon({
+  iconUrl: "images/circle-green.svg"
+});
+var taxi_icon_blue = L.icon({
+  iconUrl: "images/circle-blue.svg"
+});
+
+var taxi_icon_grey= L.icon({
+  iconUrl: "images/circle-grey.svg"
+});
+
+var taxi_stand_busy_large = L.icon({
+  iconUrl: "images/taxi-stand-busy-large.svg"
+  //iconSize: [15, 15]
+});
+var taxi_stand_busy_medium = L.icon({
+  iconUrl: "images/taxi-stand-busy-medium.svg"
+});
+var taxi_stand_busy_small = L.icon({
+  iconUrl: "images/taxi-stand-busy-small.svg"
+});
+//L.marker([40.437135,-3.708787]).addTo(map);
+var taxiMoving = L.marker([40.437135,-3.708787], {icon: taxi_icon_red});
+taxiMoving.addTo(map);
+
+var plaza_castilla_alsacia = [[-3.689526, 40.466096],[-3.670128,40.465966], [-3.667039, 40.463092], [-3.664635, 40.457999], [-3.662232,40.448463], [-3.660344, 40.442192], [-3.660344, 40.432524], 
+[-3.659657,40.419064],[-3.643006, 40.414359],[-3.623608,40.416712]];
+var goya_arguelles = [[-3.672008,40.425727],[-3.675269,40.424747],[-3.682736, 40.42527],[-3.68617,40.425335],[-3.69029, 40.425596],[-3.695954, 40.427687],[-3.702048,40.429059],[-3.710031,40.429974],[-3.716382,40.430758],	
+[-3.721618,40.42932]];
+
+var sol_parqueatracciones = [[-3.704267,40,41674],[-3.70358, 40.414192], [-3.709385,40.413831], [-3.712507,40.415303], [-3.713193, 40.418439], [-3.713108, 40.422098], [-3.72006, 40.42053], [-3.72933,40.414714], [-3.742033,40.409813], [-3.752332,40.413669 ]];
+var carabanchel_legazpi = [[-3.751645,40.371807 ],[-3.754048,40.364483],[-3.75414,40.36018],[-3.74384,40.362273],[-3.727955,40.36396],[-3.720402,40.368538],[-3.719636,40.377706],[-3.715345,40.387644],[-3.704953,40.396128],[-3.695125,40.391095]];
+
+var routes = [plaza_castilla_alsacia, goya_arguelles, sol_parqueatracciones,sol_parqueatracciones];
+var icons = [taxi_icon_red,taxi_icon_green,taxi_icon_blue, taxi_icon_grey];	
+
+var routeIndex = 0;
+var index = 0;
+var tid = setTimeout(moveTaxi, 10000);
+function moveTaxi() {
+
+	var route = routes[routeIndex];
+	var icon = icons[routeIndex];
+
+	taxiMoving.setIcon(icon); 
+		
+	taxiMoving.setLatLng([route[index][1], route[index][0]]).update();
+
+	urlTaxiStands = "services/taxistandservice/" + route[index][1] + "/" + route[index][0];
+	console.log(urlTaxiStands);
+	$.each(taxiMarkers, function(index,item)
+	{
+		map.removeLayer(item);
+	});
+	$.ajax(
+			{
+				url: urlTaxiStands, 
+				success: function(stands){
+					console.log(stands);
+					$.each(stands, function (index, item)
+					{
+						//console.log(item);
+						longitude = item._id.coordinates[0];
+						//console.log(longitude);
+						latitude = item._id.coordinates[1];
+						var totalOut = Math.abs(item.totalOut);
+						console.log(totalOut);
+						
+						if (totalOut > 8)
+							marker = L.marker([latitude,longitude],{icon: taxi_stand_busy_large});
+						else if ((totalOut > 5) & (totalOut <= 8))
+							marker = L.marker([latitude,longitude],{icon: taxi_stand_busy_medium});
+						else
+						{
+							marker = L.marker([latitude,longitude],{icon: taxi_stand_busy_small});
+						}
+					    //console.log(item);
+						taxiMarkers.push(marker);		
+						marker.addTo(map);
+
+					});
+					tid = setTimeout(moveTaxi, 10000); // repeat myself
+				  
+					index = (index + 1)%plaza_castilla_alsacia.length;
+					if (index == 0)
+					{
+						routeIndex = (routeIndex+1)%routes.length;
+					}
+				},
+				error: function (xhr, ajaxOptions, thrownError) {
+					console.log(xhr.status);
+					console.log(thrownError);
+				}
+			}
+	);  
+  
+
+}
+function abortTimer() { // to be called when you want to stop the timer
+  clearTimeout(tid);
+}
+
+colores = ['#FF0000', '#FF3333', '#FF6666', '#FF9999', '#FF8000', '#FF9933', '#FFB266','#FFFF00','#FFFF66'];
+var neighbourdMarkers = [];
+var neighbourdLayers = [];
+var t2id = setTimeout(removeActivity, 60000);
+//function getNeighbourhoodsMoreActivity() {
+$.ajax(
+		{
+		url: "services/neighbourhoodservice/moreactivity", 
+		success: function(rankingBoroughs){
+			console.log(rankingBoroughs.length);
+			var rank = 0;
+			$.each(rankingBoroughs, function (index, item)
+			{
+				$.each(barriosMadrid.features, function (j, element){
+				    if (index >= 10)
+						return;
+				    if (element.properties.label.toLowerCase() == item._id.toLowerCase())
+					{
+						console.log(rank);
+						element.properties["fill"] = colores[rank];
+						element.properties["tooltip"] = element.properties.label; 
+						element.properties["opacity"] = 1;
+						element.properties["stroke-width"] = 3; 
+						element.properties["stroke"] = colores[rank];
+						var featureLayer = L.mapbox.featureLayer(element);
+						neighbourdLayers.push(featureLayer);
+						featureLayer.addTo(map);
+
+						// Define an icon called cssIcon
+						var neighbourdHoodIcon = L.divIcon({
+						// Specify a class name we can refer to in CSS.
+							className: 'label-neighbourhood',
+							// Set marker width and height
+							iconSize: [60, 30],
+							html: "<span>" + element.properties.label + "</span>"
+						});
+					
+						var marker = L.marker([featureLayer.getBounds().getCenter().lat, featureLayer.getBounds().getCenter().lng], {icon: neighbourdHoodIcon})
+						marker.addTo(map);
+						neighbourdMarkers.push(marker);
+						rank = rank + 1;
+					}
+				});
+				
+			});
+		},
+		error: function (xhr, ajaxOptions, thrownError) {
+			console.log(xhr.status);
+			console.log(thrownError);
+		}
+});
+
+function removeActivity ()
+{
+	$.each(neighbourdMarkers, function (index, item)
+	{
+		map.removeLayer(item);
+	});
+	
+	$.each(neighbourdLayers, function (index, item)
+	{
+		map.removeLayer(item);
+	});
+}
+//};  
+
+</script>
+
+</body>
+</html>
